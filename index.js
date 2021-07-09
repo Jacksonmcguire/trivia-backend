@@ -67,7 +67,27 @@ io.on('connection', socket => {
       }
     }
   })
+
+  socket.on('end game', (room) => {
+    manager.endGame(room)
+  })
+
+  socket.on('disconnecting', () => {
+    const game = manager.games.find(game => game.host === socket.id)
+    if (game) {
+      manager.endGame(game.room); 
+      console.log(manager.games)
+    } else {
+      const game = manager.games.find(game => game.players.find(player => player.id === socket.id))    
+      if (game) {
+        manager.games[manager.games.indexOf(game)].playerLeave(socket.id)
+        console.log(manager.games[manager.games.indexOf(game)])
+        io.to(game.room).emit('update score', {manager: manager, room: game.room})
+      }
+    }
+  })
+
 })
 
-http.listen(process.env.PORT|| 4000, () => console.log('listening on port 4000'))
+http.listen(process.env.PORT || 4000, () => console.log('listening on port 4000'))
 
