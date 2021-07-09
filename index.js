@@ -11,12 +11,12 @@ let manager = new GameManager()
 
 io.on('connection', socket => {
 
-  socket.on('create game', (roomName) => {
-    socket.join(roomName)
-    if (!manager.games.find(game => game.room === roomName)) {
-      manager.newGame(roomName, socket.id)
-      io.to(roomName).emit('new game', {room: roomName, host: socket.id})
-    } else io.emit('duplicate room', {room: roomName, id: socket.id})
+  socket.on('create game', ({room, name}) => {
+    socket.join(room)
+    if (!manager.games.find(game => game.room === room)) {
+      manager.newGame(room, {id: socket.id, name: name})
+      io.to(room).emit('new game', {room: room, host: socket.id})
+    } else io.emit('duplicate room', {room: room, id: socket.id})
   })
 
   socket.on('submit slides', ({slideDeck, room}) => {
@@ -32,6 +32,7 @@ io.on('connection', socket => {
       let game = manager.games.findIndex(game => game.room === room)
       game > -1 && manager.games[game].playerJoin({name: name, id: socket.id})
       io.to(room).emit('new player', { slides: manager.games[game].slideDeck, manager: manager, room: room})
+      io.to(room).emit('new message', { name: 'Bot', message: name + ' Has joined the game' })
     } else io.emit('failed join', {room: room, id: socket.id})
   })
   
@@ -40,6 +41,7 @@ io.on('connection', socket => {
     game > -1 && manager.games[game].playerLeave(socket.id)
     socket.leave(room)
     io.to(room).emit('update score', {manager: manager, room: room})
+
   })
 
   socket.on('correct answer', (room) => {
@@ -61,9 +63,9 @@ io.on('connection', socket => {
       if (player) {
         manager.games[game].logChat({name: player.name, message: message})
         io.to(room).emit('new message', {name: player.name, message: message})
-      } else if (manager.games[game].host === id){
-        manager.games[game].logChat({name: 'Host', message: message})
-        io.to(room).emit('new message', {name: 'Host', message: message})
+      } else if (manager.games[game].host.id === id) {
+        manager.games[game].logChat({ name: manager.games[game].host.name, message: message })
+        io.to(room).emit('new message', { name: manager.games[game].host.name, message: message })
       }
     }
   })
@@ -73,16 +75,17 @@ io.on('connection', socket => {
   })
 
   socket.on('disconnecting', () => {
-    const game = manager.games.find(game => game.host === socket.id)
+    const game = manager.games.find(game => game.host.id === socket.id)
     if (game) {
       manager.endGame(game.room); 
-      console.log(manager.games)
     } else {
       const game = manager.games.find(game => game.players.find(player => player.id === socket.id))    
       if (game) {
+        let name = game.players.find(player => player.id === socket.id).name
+
         manager.games[manager.games.indexOf(game)].playerLeave(socket.id)
-        console.log(manager.games[manager.games.indexOf(game)])
         io.to(game.room).emit('update score', {manager: manager, room: game.room})
+        name && io.to(game.room).emit('new message', { name: 'Bot', message: name + ' Has left the game' })
       }
     }
   })
