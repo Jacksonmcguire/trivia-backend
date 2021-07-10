@@ -38,7 +38,7 @@ io.on('connection', socket => {
   
   socket.on('leaving player', (room) => {
     let game = manager.games.findIndex(game => game.room === room)
-    let name = game.players.find(player => player.id === socket.id).name
+    let name = game > -1 && manager.games[game].players.find(player => player.id === socket.id).name
     game > -1 && manager.games[game].playerLeave(socket.id)
     socket.leave(room)
     io.to(room).emit('update score', {manager: manager, room: room})
