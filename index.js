@@ -87,12 +87,14 @@ io.on('connection', socket => {
   })
 
   socket.on('end game', (room) => {
+    io.to(room).emit('game ending')
     manager.endGame(room)
   })
 
   socket.on('disconnecting', () => {
     const game = manager.games.find(game => game.host.id === socket.id)
     if (game) {
+      io.to(game.room).emit('game ending')
       manager.endGame(game.room); 
     } else {
       const game = manager.games.find(game => game.players.find(player => player.id === socket.id))    
