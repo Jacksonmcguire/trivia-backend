@@ -58,6 +58,13 @@ io.on('connection', socket => {
     io.to(room).emit('update score', {manager: manager, room: room})
   })
 
+  socket.on('next question', (room) => {
+    let game = manager.games.findIndex(game => game.room === room)
+    game > -1 && manager.games[game].nextQuestion()
+    
+    io.to(room).emit('advance question', manager.games[game])
+  })
+
   socket.on('message', ({message, id, room}) => {
     let game = manager.games.findIndex(game => game.room === room)
     if (game > -1) {
@@ -70,6 +77,13 @@ io.on('connection', socket => {
         io.to(room).emit('new message', { name: manager.games[game].host.name, message: message })
       }
     }
+  })
+
+  socket.on('new round', ({room, slides}) => {
+    let game = manager.games.findIndex(game => game.room === room)
+    game > -1 && manager.games[game].newRound(slides)
+    io.to(room).emit('starting new round', manager.games[game].slideDeck)
+
   })
 
   socket.on('end game', (room) => {

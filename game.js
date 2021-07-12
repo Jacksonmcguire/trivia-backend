@@ -5,6 +5,7 @@ module.exports = class Game {
     this.slideDeck = [];
     this.players = [];
     this.chat = [];
+    this.currentQ = 0;
   }
 
   playerJoin({name, id}) {
@@ -31,5 +32,15 @@ module.exports = class Game {
   logChat(chat) {
     this.chat.push(chat)
   }
+
+  nextQuestion() {
+    this.currentQ ++
+    return this.currentQ
+  }
+
+  newRound(slides) {
+    this.slideDeck = [...this.slideDeck, ...slides]
+  }
+
 
 }
