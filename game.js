@@ -22,7 +22,9 @@ module.exports = class Game {
 
   answerQuestion(id, accuracy) {
     let player = this.players.find(player => player.id === id)
-    if (player !== undefined) accuracy ? player.correct ++ : player.incorrect ++;
+    if (player !== undefined) {
+      accuracy ? player.correct ++ : player.incorrect ++
+    }
   }
 
   setSlides(slides) {
@@ -41,6 +43,4 @@ module.exports = class Game {
   newRound(slides) {
     this.slideDeck = [...this.slideDeck, ...slides]
   }
-
-
 }
